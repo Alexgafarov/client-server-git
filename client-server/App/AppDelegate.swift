@@ -2,7 +2,7 @@
 //  AppDelegate.swift
 //  client-server
 //
-//  Created by Мария Гафарова on 06.06.2021.
+//  Created by Александр Гафаров on 06.06.2021.
 //
 
 import UIKit
