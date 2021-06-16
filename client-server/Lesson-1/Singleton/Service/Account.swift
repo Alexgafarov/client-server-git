@@ -15,4 +15,5 @@ final class AccountService {
     
     var token: String = ""
     var userId: Int = 0
+    let vkApiVersion: Float = 5.131
 }

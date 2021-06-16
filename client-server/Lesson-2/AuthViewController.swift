@@ -9,9 +9,10 @@ import UIKit
 import WebKit
 
 
+
 class AuthViewController: UIViewController, WKNavigationDelegate {
 
-    let fromAurhToSession = "fromAurhToSession"
+    let fromAuthToTabBarController = "fromAuthToTabBarController"
     
     @IBOutlet weak var webView: WKWebView!{
     didSet{
@@ -81,48 +82,54 @@ class AuthViewController: UIViewController, WKNavigationDelegate {
         
         AccountService.shared.token = token!
         AccountService.shared.userId = Int(userId!)!
+        
+        
          
         friendsRequest { [weak self] in
             self?.photoRequest { [weak self] in
-                self?.groupRequest { [weak self] in
-                    self?.groupSearchRequest { [weak self] in
+                self?.groupRequest {
+//                    self?.groupSearchRequest { [weak self] in
                         
                     }
                 }
             }
-        }
+//        }
         
-         performSegue(withIdentifier: fromAurhToSession, sender: self)
+         performSegue(withIdentifier: fromAuthToTabBarController, sender: self)
     }
    
     func friendsRequest(completion: @escaping () -> Void) {
 
-        guard let url = URL(string: "https://api.vk.com/method/friends.get?order=name&access_token=\(AccountService.shared.token)&v=5.131") else { return }
+        guard let url = URL(string: "https://api.vk.com/method/friends.get?fields=nickname,bdate,city&access_token=\(AccountService.shared.token)&v=\(AccountService.shared.vkApiVersion)") else { return }
 
         let session = URLSession.shared
 
         let task = session.dataTask(with: url) { data, response, error in
-
-            let json = try? JSONSerialization.jsonObject(with: data!, options: JSONSerialization.ReadingOptions.allowFragments)
-            print("FRIENDS")
-            print(json as Any)
+            guard let data = data else { return }
+            do {
+                let model = try JSONDecoder().decode(UserResponse.self, from: data)
+                
+                model.response.items.forEach({
+                    print("\($0.first_name) \($0.last_name) was born in \($0.bdate)")
+                })
+            } catch {
+                print(error)
+            }
+            
             completion()
         }
         task.resume()
-
+ 
     }
     
     func photoRequest(completion: @escaping () -> Void) {
 
-        guard let url = URL(string: "https://api.vk.com/method/photos.get?album_id=profile&access_token=\(AccountService.shared.token)&v=5.131") else { return }
+        guard let url = URL(string: "https://api.vk.com/method/photos.get?album_id=profile&access_token=\(AccountService.shared.token)&v=\(AccountService.shared.vkApiVersion)") else { return }
 
         let session = URLSession.shared
 
         let task = session.dataTask(with: url) { data, response, error in
-
-            let json = try? JSONSerialization.jsonObject(with: data!, options: JSONSerialization.ReadingOptions.allowFragments)
-            print("PHOTOS")
-            print(json as Any)
+            guard let data = data else { return }
             completion()
         }
         task.resume()
@@ -131,37 +138,34 @@ class AuthViewController: UIViewController, WKNavigationDelegate {
     
     func groupRequest(completion: @escaping () -> Void) {
 
-        guard let url = URL(string: "https://api.vk.com/method/groups.get?&access_token=\(AccountService.shared.token)&v=5.131") else { return }
+        guard let url = URL(string: "https://api.vk.com/method/groups.get?extended=1,fields=city,place,description,members_count,contacts,verified&access_token=\(AccountService.shared.token)&v=\(AccountService.shared.vkApiVersion)") else { return }
 
         let session = URLSession.shared
 
         let task = session.dataTask(with: url) { data, response, error in
-
-            let json = try? JSONSerialization.jsonObject(with: data!, options: JSONSerialization.ReadingOptions.allowFragments)
-            print("GROUP")
-            print(json as Any)
+            guard let data = data else { return }
             completion()
         }
         task.resume()
 
     }
     
-    func groupSearchRequest(completion: @escaping () -> Void) {
-
-        guard let url = URL(string: "https://api.vk.com/method/groups.search?q=fitness&access_token=\(AccountService.shared.token)&v=5.131") else { return }
-
-        let session = URLSession.shared
-
-        let task = session.dataTask(with: url) { data, response, error in
-
-            let json = try? JSONSerialization.jsonObject(with: data!, options: JSONSerialization.ReadingOptions.allowFragments)
-            print("GROUP_SEARCH")
-            print(json as Any)
-            completion()
-        }
-        task.resume()
-
-    }
+//    func groupSearchRequest(completion: @escaping () -> Void) {
+//
+//        guard let url = URL(string: "https://api.vk.com/method/groups.search?q=fitness&access_token=\(AccountService.shared.token)&v=\(AccountService.shared.vkApiVersion)") else { return }
+//
+//        let session = URLSession.shared
+//
+//        let task = session.dataTask(with: url) { data, response, error in
+//
+//            let json = try? JSONSerialization.jsonObject(with: data!, options: JSONSerialization.ReadingOptions.allowFragments)
+//            print("GROUP_SEARCH")
+//            print(json as Any)
+//            completion()
+//        }
+//        task.resume()
+//
+//    }
     
 }
 
